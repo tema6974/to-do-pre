@@ -11,15 +11,28 @@ const listElement = document.querySelector(".to-do__list");
 const formElement = document.querySelector(".to-do__form");
 const inputElement = document.querySelector(".to-do__input");
 
-function loadTasks() {
+const loadTasks = () => {
 	const savedTasks = localStorage.getItem("tasks");
 	if (savedTasks) {
 		return JSON.parse(savedTasks);
 	}
 	return items;
-}
+};
 
-function createItem(item) {
+const getTasksFromDOM = () => {
+	const itemsNamesElements = document.querySelectorAll(".to-do__item-text");
+	return Array.from(itemsNamesElements).map((element) => element.textContent);
+};
+
+const saveTasks = (tasks) => {
+	localStorage.setItem("tasks", JSON.stringify(tasks));
+};
+
+const updateTasksStore = () => {
+	saveTasks(getTasksFromDOM());
+};
+
+const createItem = (item) => {
 	const template = document.getElementById("to-do__item-template");
 	const clone = template.content.querySelector(".to-do__item").cloneNode(true);
 	const textElement = clone.querySelector(".to-do__item-text");
@@ -31,16 +44,14 @@ function createItem(item) {
 
 	deleteButton.addEventListener("click", () => {
 		clone.remove();
-		const items = getTasksFromDOM();
-		saveTasks(items);
+		updateTasksStore();
 	});
 
 	duplicateButton.addEventListener("click", () => {
 		const itemName = textElement.textContent;
 		const newItem = createItem(itemName);
 		listElement.prepend(newItem);
-		const items = getTasksFromDOM();
-		saveTasks(items);
+		updateTasksStore();
 	});
 
 	editButton.addEventListener("click", () => {
@@ -50,34 +61,24 @@ function createItem(item) {
 
 	textElement.addEventListener("blur", () => {
 		textElement.setAttribute("contenteditable", "false");
-		const items = getTasksFromDOM();
-		saveTasks(items);
+		updateTasksStore();
 	});
 
 	return clone;
-}
-
-function getTasksFromDOM() {
-	const itemsNamesElements = document.querySelectorAll(".to-do__item-text");
-	const tasks = [];
-	itemsNamesElements.forEach((element) => {
-		tasks.push(element.textContent);
-	});
-	return tasks;
-}
-
-function saveTasks(tasks) {
-	localStorage.setItem("tasks", JSON.stringify(tasks));
-}
+};
 
 formElement.addEventListener("submit", (evt) => {
 	evt.preventDefault();
-	const taskText = inputElement.value;
+	const taskText = inputElement.value.trim();
+
+	if (!taskText) {
+		return;
+	}
+
 	const newItem = createItem(taskText);
 	listElement.prepend(newItem);
 
-	items = getTasksFromDOM();
-	saveTasks(items);
+	updateTasksStore();
 
 	inputElement.value = "";
 });
